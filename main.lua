@@ -36,6 +36,10 @@ local ActiveChannel = 1
 local ActiveButtonPage = 1
 local LastActiveButton = 0
 
+--[	####################################################################
+--[	Value der Globalen Variable zur Übertragung der Tasten
+--[	für das Steuerpad im Beier SFR-1/SFR-1-HL
+--[	####################################################################
 local KeyValues = {
   Neutral = -20,
   Taste1 = 860,
@@ -52,6 +56,9 @@ local KeyValues = {
   Umschaltung = 1020
 }
 
+--[	####################################################################
+--[	Zuordnung der Globalen Variable für aktive Control im Widget
+--[	####################################################################
 local GlobalVarialble = {
   {GVarName="GV1",
   Index=0,
@@ -67,6 +74,12 @@ local buttonType = {
   switch = "switch"
 }
 
+--[	####################################################################
+--[	Konfiguration der Buttons 
+--[	Cotrol im Widget (max. 2 Stk.)
+--[	 -> Pages (max. 2 Stück)
+--[	   -> Buttons max. 6 Stk./Page
+--[	####################################################################
 local configTable = {
   {
     -- Seite 1 Ebne 1
@@ -136,6 +149,9 @@ local configTable = {
 
 local buttons = {}
 
+--[	####################################################################
+--[	Button Zustand. Gedrückt oder nicht.
+--[	####################################################################
 local buttonState = {
   active = "active",
   inactive = "inactive"
@@ -146,15 +162,15 @@ local buttonState = {
 --[	write logfile
 --[	####################################################################
 local function write_log(message, create)
-    local write_mode = "a"
-      if create ~= true then
-        write_mode = "a"
-      else
-        write_mode = "w"
-      end
-			local file = io.open(log_filename, write_mode)
-			io.write(file, message, "\r\n")
-			io.close(file)
+--    local write_mode = "a"
+--      if create ~= true then
+--        write_mode = "a"
+--      else
+--        write_mode = "w"
+--      end
+--			local file = io.open(log_filename, write_mode)
+--			io.write(file, message, "\r\n")
+--			io.close(file)
 end
 
 --[#####################################################################################################
@@ -191,16 +207,6 @@ local function doNothing()
 end
 --[#####################################################################################################
 --[ CreateButton erzeugt einen Pushbutton oder ToggleButton
---[  x: x-Position auf dem Touchscreen im Vollbildmodus
---[  y: y-Position auf dem Touchscreen im Vollbildmodus
---[  w: Die Breite des erzeugenden Button
---[  h: Die Höhe des zu erzeugenden Button
---[  ButtonName: Name des Buttons. Reine Information zur Zeit
---[  Image: Das Image das den Button darstellt
---[  ButtonType: Der Typ des Button siehe buttonType-Objekt
---[  globalVarInfo: Liste der einstellungen des Globalen Variable
---[  CallBack: Die Methode die beim Auslösen des Button aufgerufen wird.´
---[  flags: Zur Zeit unbenutzt
 --[#####################################################################################################
 local function CreateButton(Position, WidgetPosition, W, H, ButtonName, Image, ButtonType, globalVarValue, CallBack, flags)
   local self = {
@@ -219,16 +225,10 @@ local function CreateButton(Position, WidgetPosition, W, H, ButtonName, Image, B
     globalVarValue = globalVarValue or KeyValues.Neutral
   }
 
-
-  --write_log("CreateButton [" .. ButtonName .. "] x/y:" ..x .. y .. " w/h:" .. w .. "/" .. h .. " ButtonType:" .. self.buttonType, false)
   function self.draw( event, widget)
     local pos = self.position
-
-    -- write_log("Button.draw [" .. ButtonName .. "] x/y:" ..x .. y .. " w/h:" .. w .. "/" .. h, false)
-
     if event == nil then
       pos = self.widgetposition
-      -- write_log("Widget w/h:" .. widget.zone.w .. "/" .. widget.zone.h.." Scale:"..scale.."%", false)
       if widget.zone.h < 85 then
         lcd.drawText(0,0,"Das Wideget benötigt min. 50% Ansicht in der Hoehe")
         lcd.drawText(0,15,"the widget need min. 50% view in hight")
@@ -257,7 +257,6 @@ local function CreateButton(Position, WidgetPosition, W, H, ButtonName, Image, B
     write_log("self.OnEvent is entered at " .. self.ButtonName ,false)
     if event == nil then -- Widget mode
       -- Draw in widget mode. The size equals zone.w by zone.h
-      --lcd.drawText(30,30,"Widget w/h:" .. zone.w .. "/" .. zone.h);
     else -- Full screen mode
       -- Draw in full screen mode. The size equals LCD_W by 
       if event ~= 0 then -- Do we have an event?
@@ -356,13 +355,7 @@ end
 --[ Ändert sich die Bildhöhe muss zwingend die Variable ImageHight oben eingestellt werden.
 --[ ====================================================================================================
 local function LoadConfig(widget)
-  write_log("Name,x,y,w,h,xmax,ymax,state,type",true)
-
-  --local MyConfig = loadScript("/WIDGETS/SWTBOX/config.lua")
-  --local myConfigFunction = MyConfig()
-  --configTable = myConfigFunction()
-
-  write_log("LoadConfig: Bitmap Width:" .. BitmapWidth .. " BitmapHeight:" .. BitmapHeight,false)
+  write_log("LoadConfig: Bitmap Width:" .. BitmapWidth .. " BitmapHeight:" .. BitmapHeight,true)
 
   -- Inititalisieren der Globalenn Variable
   model.setGlobalVariable(GlobalVarialble[ActiveChannel].Index, GlobalVarialble[ActiveChannel].Phase, KeyValues.Neutral)
@@ -491,11 +484,9 @@ end
 local function refresh(widget, event, touchState)
   -- Runs periodically only when widget instance is visible
   -- If full screen, then event is 0 or event value, otherwise nil
---    lcd.drawText(0,0,"Text")
   findTouched(event, touchState, widget)
 
   if ActiveButtonPage == 2 and LastActiveButton > 0 then
---    write_log("Active Button at: " .. LastActiveButton .. "s detectd", false)
     if getGlobalTimer()["session"] - LastActiveButton > 10 then
       -- Reset ausführen
       write_log("Automatic Switch-Reset! Inactive Time:" ..  getGlobalTimer()["session"] - LastActiveButton .. "s",false)
