@@ -1,4 +1,5 @@
 Softswitch für Beier SFR-1 oder SFR-1-HL Steuerpad.
+
 Benötigt EdgeTX 2.7.x
 
 ![Widget](https://github.com/dieterbruse/softswitchpad/raw/main/Screenshoots/screen-2022-09-19-150242.jpg)
