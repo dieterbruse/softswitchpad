@@ -176,7 +176,7 @@ end
 --[#####################################################################################################
 --[ CallBackFunktion wird aufgerufen wenn ein Button gedrückt wurde
 --[#####################################################################################################
-local function CallBackFunktion(ImageButton)
+local function CallBackFunktion(ImageButton, widget)
   local Value = ImageButton.globalVarValue
 --  lcd.drawText(0,180,"Button Pressed")
   if ImageButton.buttonState == buttonState.inactive then
@@ -199,8 +199,16 @@ local function CallBackFunktion(ImageButton)
     end
     ImageButton.buttonState = buttonState.inactive
   end
-  
+
   model.setGlobalVariable(GlobalVarialble[ActiveChannel].Index, GlobalVarialble[ActiveChannel].Phase, Value)
+  if Value ~= KeyValues.Neutral then
+    if ImageButton.buttonType == buttonType.switch then
+      playHaptic(20, 10 )
+      playHaptic(20, 0 )
+    else
+      playHaptic(15, 0 )
+    end
+  end
 end
 
 local function doNothing()
@@ -253,7 +261,7 @@ local function CreateButton(Position, WidgetPosition, W, H, ButtonName, Image, B
   --[#####################################################################################################
   --[ Eventhandler für einen Button
   --[#####################################################################################################
-  function self.onEvent(event, touchState)
+  function self.onEvent(event, touchState, widget)
     write_log("self.OnEvent is entered at " .. self.ButtonName ,false)
     if event == nil then -- Widget mode
       -- Draw in widget mode. The size equals zone.w by zone.h
@@ -274,21 +282,21 @@ local function CreateButton(Position, WidgetPosition, W, H, ButtonName, Image, B
               end
             end
             self.buttonSelected = true
-            return self.callBack(self)
+            return self.callBack(self, widget)
             -- When the finger first hits the screen
           elseif event == EVT_TOUCH_BREAK then
             if self.buttonType == buttonType.pushbutton or self.buttonType == buttonType.switch then
               self.buttonState = buttonState.inactive
             end
             self.buttonSelected = false
-            return self.callBack(self)
+            return self.callBack(self, widget)
             -- When the finger leaves the screen and did not slide on it
           elseif event == EVT_TOUCH_TAP then
             if self.buttonType == buttonType.pushbutton or self.buttonType == buttonType.switch then
               self.buttonState = buttonState.inactive
             end
             self.buttonSelected = false
-            return self.callBack(self)
+            return self.callBack(self, widget)
 
             -- A short tap gives TAP instead of BREAK
             -- touchState.tapCount shows number of taps
@@ -306,13 +314,13 @@ local function CreateButton(Position, WidgetPosition, W, H, ButtonName, Image, B
                 self.buttonState = buttonState.active
               end
             end
-            return self.callBack(self)
+            return self.callBack(self, widget)
           elseif event == EVT_VIRTUAL_ENTER then
             write_log("self.OnEvent EVT_VIRTUAL_ENTER.",false)
             if self.buttonType == buttonType.pushbutton or self.buttonType == buttonType.switch then
               self.buttonState = buttonState.inactive
             end
-            return self.callBack(self)
+            return self.callBack(self, widget)
           end
         end
         write_log("End of Eventcheck at self.OnEnvent", false)
@@ -402,7 +410,7 @@ local function findTouched(event, touchState, widget)
             and touchState.y <= buttons[ActiveChannel][ActiveButtonPage][i].ymax then
             result = true
             write_log("findTouched found at [" .. buttons[ActiveChannel][ActiveButtonPage][i].ButtonName .. " Type:" ..buttons[ActiveChannel][ActiveButtonPage][i].buttonType, false)
-            buttons[ActiveChannel][ActiveButtonPage][i].onEvent(event, touchState);
+            buttons[ActiveChannel][ActiveButtonPage][i].onEvent(event, touchState, widget);
           end
         end
       else
@@ -413,6 +421,8 @@ local function findTouched(event, touchState, widget)
             else
               ActiveChannel = 1
             end
+            playHaptic(10, 5 )
+            playHaptic(10, 0 )
           end
         elseif event == EVT_VIRTUAL_NEXT then
           -- Als erstes den TouchState aufheben
@@ -444,7 +454,7 @@ local function findTouched(event, touchState, widget)
             LastActiveButton = getGlobalTimer()["session"]
             write_log("Umschaltung erkannt um:" .. LastActiveButton)
           end
-          buttons[ActiveChannel][ActiveButtonPage][touchedButton].onEvent(event, touchState)
+          buttons[ActiveChannel][ActiveButtonPage][touchedButton].onEvent(event, touchState, widget)
         elseif event == EVT_EXIT_FIRST or event == 1540 then
           if touchedButton ~= -1 then
             buttons[ActiveChannel][ActiveButtonPage][touchedButton].buttonSelected = false
@@ -492,6 +502,8 @@ local function refresh(widget, event, touchState)
       write_log("Automatic Switch-Reset! Inactive Time:" ..  getGlobalTimer()["session"] - LastActiveButton .. "s",false)
       LastActiveButton = 0
       ActiveButtonPage = 1
+      playHaptic(20, 10 )
+      playHaptic(20, 0 )
     end
 
   end
