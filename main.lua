@@ -237,9 +237,10 @@ local function CreateButton(Position, WidgetPosition, W, H, ButtonName, Image, B
     local pos = self.position
     if event == nil then
       pos = self.widgetposition
-      if widget.zone.h < 85 then
+      if widget.zone.h < 84 then
         lcd.drawText(0,0,"Das Wideget benötigt min. 50% Ansicht in der Hoehe")
         lcd.drawText(0,15,"the widget need min. 50% view in hight")
+        -- lcd.drawText(0,30,"Size " .. widget.zone.w .. "/" .. widget.zone.h)
         return
       end
     end
