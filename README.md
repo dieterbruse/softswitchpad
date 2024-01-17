@@ -1,4 +1,4 @@
-Softswitch für Beier SFR-1 oder SFR-1-HL Steuerpad.
+Softswitch für Benedini TBS Micro und TBS Mini Soundmodul.
 
 [Benötigt EdgeTX 2.7.x oder höher](https://github.com/EdgeTX/edgetx)
 
