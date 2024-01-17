@@ -1,7 +1,7 @@
--- Lua TBSSwitch for Das Modul/Benedini Micro/Mini widget V0.1
+-- Lua SwitchBox for Beier SFR-1 widget V0.1
 --
 --
--- A Radiomaster TX16S widget for the EdgeTX OS to simulate a TBSSWT
+-- A Radiomaster TX16S widget for the EdgeTX OS to simulate a SWTBOX
 --
 -- Author: Dieter Bruse http://bruse-it.com/
 --
@@ -19,15 +19,11 @@
 --
 -- You should have received a copy of the GNU General Public License
 -- along with this program; if not, see <http://www.gnu.org/licenses>.
-local log_filename = "/LOGS/TBSSWTWidget.log"
-local name = "TBSSwitch"
+local log_filename = "/LOGS/SBOXSFR1Widget.txt"
+local name = "SFR1Box"
 local touchedButton = -1
-local BitmapButton = Bitmap.open("/WIDGETS/TBSSWT/PNG/Btn0.png")
+local BitmapButton = Bitmap.open("/WIDGETS/SWTBOX/PNG/Btn0.png")
 local BitmapWidth, BitmapHeight = Bitmap.getSize(BitmapButton)
---[	####################################################################
---[ Takt und Auslösedauer der Logischen Schalter können entsprechend angepasst werden.cp
-local LSTaktzeit = -127 -- Taktzeit für den logischen Schalter -128 = 0,1s, -127=0,2s usw.
-local LSDauer = 2 -- Entspricht 1/10s und muss zur LSTaktzeit entsprechend eingestellt werden.
 -- local ChannelLearning = 0
 
 local options = {
@@ -35,45 +31,30 @@ local options = {
   { "SelectBorder", COLOR, RED},
   { "ButtonColor", COLOR, BLUE},
   { "PressedColor", COLOR, GREEN},
-  { "SecondCoder12Key", BOOL, 0},
+  { "TwinChannel", BOOL, 0},
 }
 local ActiveChannel = 1
 local ActiveButtonPage = 1
 local LastActiveButton = 0
-local TimerInUSeconds = 50
 
 --[	####################################################################
 --[	Value der Globalen Variable zur Übertragung der Tasten
---[	Taste 1-12 dienen für den 1st Coder 12Keys, Tasten EKMFTaste 1-12
---[ für den 2nd Coder 12Keys
+--[	für das Steuerpad im Beier SFR-1/SFR-1-HL
 --[	####################################################################
 local KeyValues = {
-  Neutral = 0,
-  Taste1 = 922,
-  Taste2 = 768,
-  Taste3 = 614,
-  Taste4 = 461,
-  Taste5 = 307,
-  Taste6 = 154,
-  Taste7 = -154,
-  Taste8 = -307,
-  Taste9 = -461,
-  Taste10 = -614,
-  Taste11 = -768,
-  Taste12 = -922,
-  Umschaltung = 1020,
-  EKMFTaste1 = 1,
-  EKMFTaste2 = 2,
-  EKMFTaste3 = 3,
-  EKMFTaste4 = 4,
-  EKMFTaste5 = 5,
-  EKMFTaste6 = 6,
-  EKMFTaste7 = 7,
-  EKMFTaste8 = 8,
-  EKMFTaste9 = 9,
-  EKMFTaste10 = 10,
-  EKMFTaste11 = 11,
-  EKMFTaste12 = 12,
+  Neutral = -20,
+  Taste1 = 860,
+  Taste2 = 560,
+  Taste3 = 260,
+  Taste4 = -320,
+  Taste5 = -580,
+  Taste6 = -880,
+  Taste7 = -1020,
+  Taste8 = -760,
+  Taste9 = -460,
+  Taste10 = 420,
+  Taste11 = 700,
+  Umschaltung = 1020
 }
 
 --[	####################################################################
@@ -91,49 +72,79 @@ local GlobalVarialble = {
 local buttonType = {
   pushbutton = "pushbutton",
   togglebutton = "togglebutton",
-  ekmfabutton = "ekmfabutton",
   switch = "switch"
 }
 
 --[	####################################################################
---[	Konfiguration der Buttons
+--[	Konfiguration der Buttons 
 --[	Cotrol im Widget (max. 2 Stk.)
---[	 -> Pages (max. 1 Stück)
---[	   -> Buttons max. 12 Stk./Page
+--[	 -> Pages (max. 2 Stück)
+--[	   -> Buttons max. 6 Stk./Page
 --[	####################################################################
 local configTable = {
   {
     -- Seite 1 Ebne 1
     {
-      { Name="Text", FileName="wMotor.png", Mode=buttonType.pushbutton,ROW=1,COL=1, Value=KeyValues.Taste1 },
-      { Name="Text", FileName="wSound.png", Mode=buttonType.pushbutton,ROW=1,COL=2, Value=KeyValues.Taste2 },
-      { Name="Text", FileName="wRKL.png",  Mode=buttonType.pushbutton,ROW=1,COL=3, Value=KeyValues.Taste3 },
-      { Name="Text", FileName="wWarnblinker.png", Mode=buttonType.pushbutton,ROW=1,COL=4, Value=KeyValues.Taste4 },
-      { Name="Text", FileName="wStandlicht.png", Mode=buttonType.pushbutton,ROW=1,COL=5, Value=KeyValues.Taste5 },
-      { Name="Text", FileName="wAbblendlicht.png", Mode=buttonType.pushbutton,ROW=1,COL=6, Value=KeyValues.Taste6 },
-      { Name="Text", FileName="wFernlicht.png", Mode=buttonType.pushbutton,ROW=2,COL=1, Value=KeyValues.Taste7 },
-      { Name="Text", FileName="wNebelscheinwerfer.png", Mode=buttonType.pushbutton,ROW=2,COL=2, Value=KeyValues.Taste9 },
-      { Name="Text", FileName="wBlinkLinks.png", Mode=buttonType.pushbutton,ROW=2,COL=3, Value=KeyValues.Taste9 },
-      { Name="Text", FileName="wBlinkRechts.png", Mode=buttonType.pushbutton,ROW=2,COL=4, Value=KeyValues.Taste10 },
-      { Name="Text", FileName="wMinus.png", Mode=buttonType.pushbutton,ROW=2,COL=5, Value=KeyValues.Taste11 },
-      { Name="Text", FileName="wPlus.png", Mode=buttonType.pushbutton,ROW=2,COL=6, Value=KeyValues.Taste12 }
+      { Name="Umschaltung", FileName="btn0.png", Mode=buttonType.switch,ROW=1,COL=1, Value=KeyValues.Umschaltung },
+      { Name="Standlicht", FileName="btn1.png", Mode=buttonType.pushbutton,ROW=1,COL=2,Value=KeyValues.Taste11 },
+      { Name="Abblendlicht", FileName="btn2.png", Mode=buttonType.pushbutton,ROW=1,COL=3, Value=KeyValues.Taste10 },
+      { Name="Fernlicht", FileName="btn3.png", Mode=buttonType.pushbutton,ROW=1,COL=4, Value=KeyValues.Taste9 },
+      { Name="Scheinwerfer", FileName="btn4.png", Mode=buttonType.pushbutton,ROW=1,COL=5, Value=KeyValues.Taste8 },
+      { Name="Nebelscheinwerfer", FileName="btn5.png", Mode=buttonType.pushbutton,ROW=1,COL=6, Value=KeyValues.Taste7 },
+      { Name="Blaulicht", FileName="btn6.png", Mode=buttonType.pushbutton,ROW=2,COL=1, Value=KeyValues.Taste1 },
+      { Name="Scheinwerfer", FileName="btn7.png", Mode=buttonType.pushbutton,ROW=2,COL=2, Value=KeyValues.Taste2 },
+      { Name="Strahler", FileName="btn8.png", Mode=buttonType.pushbutton,ROW=2,COL=3, Value=KeyValues.Taste3 },
+      { Name="Blinker links", FileName="btn9.png", Mode=buttonType.pushbutton,ROW=2,COL=4, Value=KeyValues.Taste4 },
+      { Name="Warnblinker", FileName="btn10.png", Mode=buttonType.pushbutton,ROW=2,COL=5, Value=KeyValues.Taste5 },
+      { Name="Blinker rechts", FileName="btn11.png", Mode=buttonType.pushbutton,ROW=2,COL=6, Value=KeyValues.Taste6 }
+  --    { Name="SyncButton" , FileName="sync.png", Mode=buttonType.pushbutton,ROW=3,COL=3, Value=KeyValues.Sync }
+    },
+    -- Seite 1 Ebene 2
+    {
+      { Name="Umschaltung", FileName="btn0.png", Mode=buttonType.switch,ROW=1,COL=1, Value=KeyValues.Umschaltung },
+      { Name="Stuetze auf", FileName="btn21.png", Mode=buttonType.pushbutton,ROW=1,COL=2,Value=KeyValues.Taste11 },
+      { Name="Stuetze ab", FileName="btn22.png", Mode=buttonType.pushbutton,ROW=1,COL=3, Value=KeyValues.Taste10 },
+      { Name="Kurve 1", FileName="btn82.png", Mode=buttonType.pushbutton,ROW=1,COL=4, Value=KeyValues.Taste9 },
+      { Name="Kurve 2", FileName="btn83.png", Mode=buttonType.pushbutton,ROW=1,COL=5, Value=KeyValues.Taste8 },
+      { Name="Sattelplatte", FileName="btn25.png", Mode=buttonType.pushbutton,ROW=1,COL=6, Value=KeyValues.Taste7 },
+      { Name="Schubboden", FileName="btn26.png", Mode=buttonType.pushbutton,ROW=2,COL=1, Value=KeyValues.Taste1 },
+      { Name="Schubboden", FileName="btn27.png", Mode=buttonType.pushbutton,ROW=2,COL=2, Value=KeyValues.Taste2 },
+      { Name="Kippen", FileName="btn28.png", Mode=buttonType.pushbutton,ROW=2,COL=3, Value=KeyValues.Taste3 },
+      { Name="Kippen", FileName="btn29.png", Mode=buttonType.pushbutton,ROW=2,COL=4, Value=KeyValues.Taste4 },
+      { Name="Plus", FileName="btn30.png", Mode=buttonType.pushbutton,ROW=2,COL=5, Value=KeyValues.Taste5 },
+      { Name="Minus", FileName="btn31.png", Mode=buttonType.pushbutton,ROW=2,COL=6, Value=KeyValues.Taste6 }
     }
   },
   {
     -- Seite 2 Ebne 1
     {
-      { Name="Text", FileName="bMotor.png", Mode=buttonType.ekmfabutton,ROW=1,COL=1, Value=KeyValues.EKMFTaste1 },
-      { Name="Text", FileName="bTempomat.png", Mode=buttonType.ekmfabutton,ROW=1,COL=2,Value=KeyValues.EKMFTaste2 },
-      { Name="Text", FileName="bSchubbodenEin.png", Mode=buttonType.ekmfabutton,ROW=1,COL=3, Value=KeyValues.EKMFTaste3 },
-      { Name="Text", FileName="bSchubbodenAus.png", Mode=buttonType.ekmfabutton,ROW=1,COL=4, Value=KeyValues.EKMFTaste4 },
-      { Name="Text", FileName="bMF1.png", Mode=buttonType.ekmfabutton,ROW=1,COL=5, Value=KeyValues.EKMFTaste5 },
-      { Name="Text", FileName="bMF2.png", Mode=buttonType.ekmfabutton,ROW=1,COL=6, Value=KeyValues.EKMFTaste6 },
-      { Name="Text", FileName="bSattelstuetzeAuf.png", Mode=buttonType.ekmfabutton,ROW=2,COL=1, Value=KeyValues.EKMFTaste7 },
-      { Name="Text", FileName="bSattelstuetzeAb.png", Mode=buttonType.ekmfabutton,ROW=2,COL=2, Value=KeyValues.EKMFTaste8 },
-      { Name="Text", FileName="bKipperAuf.png", Mode=buttonType.ekmfabutton,ROW=2,COL=3, Value=KeyValues.EKMFTaste9 },
-      { Name="Text", FileName="bKipperAb.png", Mode=buttonType.ekmfabutton,ROW=2,COL=4, Value=KeyValues.EKMFTaste10 },
-      { Name="Text", FileName="bSattelplatte.png", Mode=buttonType.ekmfabutton,ROW=2,COL=5, Value=KeyValues.EKMFTaste11 },
-      { Name="Text", FileName="bSequenz1.png", Mode=buttonType.ekmfabutton,ROW=2,COL=6, Value=KeyValues.EKMFTaste12 }
+      { Name="Umschaltung", FileName="btn0.png", Mode=buttonType.switch,ROW=1,COL=1, Value=KeyValues.Umschaltung },
+      { Name="Servo 1", FileName="btn50.png", Mode=buttonType.pushbutton,ROW=1,COL=2,Value=KeyValues.Taste11 },
+      { Name="Servo 2", FileName="btn51.png", Mode=buttonType.pushbutton,ROW=1,COL=3, Value=KeyValues.Taste10 },
+      { Name="Servo 3", FileName="btn52.png", Mode=buttonType.pushbutton,ROW=1,COL=4, Value=KeyValues.Taste9 },
+      { Name="Audio 1", FileName="btn54.png", Mode=buttonType.pushbutton,ROW=1,COL=5, Value=KeyValues.Taste8 },
+      { Name="Audio 2", FileName="btn55.png", Mode=buttonType.pushbutton,ROW=1,COL=6, Value=KeyValues.Taste7 },
+      { Name="Audio aus", FileName="btn56.png", Mode=buttonType.pushbutton,ROW=2,COL=1, Value=KeyValues.Taste1 },
+      { Name="Tempomat", FileName="btn57.png", Mode=buttonType.pushbutton,ROW=2,COL=2, Value=KeyValues.Taste2 },
+      { Name="Gas Spiel", FileName="btn58.png", Mode=buttonType.pushbutton,ROW=2,COL=3, Value=KeyValues.Taste3 },
+      { Name="Lift", FileName="btn59.png", Mode=buttonType.pushbutton,ROW=2,COL=4, Value=KeyValues.Taste4 },
+      { Name="Funktion 1", FileName="btn60.png", Mode=buttonType.pushbutton,ROW=2,COL=5, Value=KeyValues.Taste5 },
+      { Name="Funktion 2", FileName="btn61.png", Mode=buttonType.pushbutton,ROW=2,COL=6, Value=KeyValues.Taste6 }
+    },
+    -- Seite 2 Ebene 2
+    {
+      { Name="Umschaltung", FileName="btn0.png", Mode=buttonType.switch,ROW=1,COL=1, Value=KeyValues.Umschaltung },
+      { Name="Sequenz 1", FileName="btn70.png", Mode=buttonType.pushbutton,ROW=1,COL=2,Value=KeyValues.Taste11 },
+      { Name="Sequenz 2", FileName="btn71.png", Mode=buttonType.pushbutton,ROW=1,COL=3, Value=KeyValues.Taste10 },
+      { Name="Sequenz 3", FileName="btn72.png", Mode=buttonType.pushbutton,ROW=1,COL=4, Value=KeyValues.Taste9 },
+      { Name="Sequenz 4", FileName="btn73.png", Mode=buttonType.pushbutton,ROW=1,COL=5, Value=KeyValues.Taste8 },
+      { Name="Sequenz 5", FileName="btn74.png", Mode=buttonType.pushbutton,ROW=1,COL=6, Value=KeyValues.Taste7 },
+      { Name="Sequenz 6", FileName="btn75.png", Mode=buttonType.pushbutton,ROW=2,COL=1, Value=KeyValues.Taste1 },
+      { Name="Sequenz 7", FileName="btn76.png", Mode=buttonType.pushbutton,ROW=2,COL=2, Value=KeyValues.Taste2 },
+      { Name="Sequenz 8", FileName="btn77.png", Mode=buttonType.pushbutton,ROW=2,COL=3, Value=KeyValues.Taste3 },
+      { Name="Multifunktion 1", FileName="btn78.png", Mode=buttonType.pushbutton,ROW=2,COL=4, Value=KeyValues.Taste4 },
+      { Name="Multifunktion 2", FileName="btn79.png", Mode=buttonType.pushbutton,ROW=2,COL=5, Value=KeyValues.Taste5 },
+      { Name="Multifunktion 3", FileName="btn80.png", Mode=buttonType.pushbutton,ROW=2,COL=6, Value=KeyValues.Taste6 }
     }
   }
 }
@@ -169,18 +180,7 @@ end
 --[#####################################################################################################
 local function CallBackFunktion(ImageButton, widget)
   local Value = ImageButton.globalVarValue
-  local EkmfaCount = 0
 --  lcd.drawText(0,180,"Button Pressed")
-
-  write_log("Callback\n\tImageButton Name:[" .. ImageButton.ButtonName .. "]"
-      .. "\n\tState:[" .. ImageButton.buttonState .. "]"
-      .. "\n\tValue:[" .. Value .. "]"
-      .. "\n\tType:[" .. ImageButton.buttonType .. "]"
-      .. "\n\tbuttonSelected:[" .. tostring(ImageButton.buttonSelected) .. "]"
-      .. "\n\tEKMFFireEvent:[" .. tostring(ImageButton.EKMFFireEvent) .. "]"
-      .. "\n\tAktivBtnPg:[" .. ActiveButtonPage .. "]"
-      , false)
-
   if ImageButton.buttonState == buttonState.inactive then
     Value = KeyValues.Neutral
     if ActiveButtonPage == 2 and ImageButton.buttonType ~= buttonType.switch then
@@ -188,37 +188,31 @@ local function CallBackFunktion(ImageButton, widget)
       LastActiveButton = 0
     end
   end
-
-  --[ Ein EKMFA Button wurde gedrückt.
-  if ImageButton.buttonType == buttonType.ekmfabutton then
-    EkmfaCount = Value
-
-    if ImageButton.buttonSelected == true then --[ Der Button ist ausgewählt/gedrückt
-      if ImageButton.EKMFFireEvent == true then --[ Der Button wurde zum wiederholten mal gedrükt um die Funktion auszulösen.
-        Value = -1024
-      else --[ Der Button wurde zu ersten mal gedrückt. Eine Sonderverarbeitung weiter unten
-        Value = 1024;
-      end
-    else --[ Button wurde losgelassen für die Funktion
---      write_log("Callback EKMFA Button is no more Selected")
-      Value = KeyValues.Neutral
-      ImageButton.EKMFFireEvent = false
+  write_log("Callback " .. ImageButton.ButtonName .. " State:" .. ImageButton.buttonState .. " Value:" .. Value .. " AktivBtnPg:" .. ActiveButtonPage, false)
+--  if Value == KeyValues.Sync
+--  then
+--    model.setGlobalVariable(GlobalVarialble[ActiveChannel].Index, GlobalVarialble[ActiveChannel].Phase, KeyValues.Umschaltung)
+--    playHaptic(20, 200 )
+--    model.setGlobalVariable(GlobalVarialble[ActiveChannel].Index, GlobalVarialble[ActiveChannel].Phase, KeyValues.Neutral)
+--    playHaptic(20, 10 )
+--    playHaptic(20, 500 )
+--    model.setGlobalVariable(GlobalVarialble[ActiveChannel].Index, GlobalVarialble[ActiveChannel].Phase, KeyValues.Taste7)
+--    playHaptic(200, 0 )
+--    Value = KeyValues.Neutral
+--end
+  -- Zeilenumschaltung und Timer Handling
+  if ImageButton.buttonType == buttonType.switch and Value ~= KeyValues.Neutral then
+    if ActiveButtonPage == 2 then
+      ActiveButtonPage = 1
+      LastActiveButton = 0
+    else
+      ActiveButtonPage = 2
+      LastActiveButton = getGlobalTimer()["session"]
     end
+    ImageButton.buttonState = buttonState.inactive
   end
 
---  write_log("Callback " .. ImageButton.ButtonName .. " State:" .. ImageButton.buttonState .. " Value:" .. Value .. " AktivBtnPg:" .. ActiveButtonPage, false)
-  --[ Sonderverarbeitung für die Funktionsauswahl.
-  --[ Es wird nun der logische L64 auf die passende Auslösedauer programmiert der auf Globale Varialbe GV2 reagiert.
-  if ImageButton.buttonType == buttonType.ekmfabutton
-      and ImageButton.EKMFFireEvent == false
-      and ImageButton.buttonSelected == true
-      and ImageButton.buttonState == buttonState.active then
---    write_log("Callback EKMFA Button Set Switch and GV2 for select the Function :" .. EkmfaCount .. " Value: " .. Value)
-    model.setLogicalSwitch(63, {func=LS_FUNC_VEQUAL, v1=getSourceIndex("GV2"), v2=1024, duration=(LSDauer * 2 * EkmfaCount)})
-  end
---  write_log("Callback set the Value: " .. Value)
   model.setGlobalVariable(GlobalVarialble[ActiveChannel].Index, GlobalVarialble[ActiveChannel].Phase, Value)
-
   if Value ~= KeyValues.Neutral then
     if ImageButton.buttonType == buttonType.switch then
       playHaptic(20, 10 )
@@ -231,7 +225,6 @@ end
 
 local function doNothing()
 end
-
 --[#####################################################################################################
 --[ CreateButton erzeugt einen Pushbutton oder ToggleButton
 --[#####################################################################################################
@@ -249,8 +242,7 @@ local function CreateButton(Position, WidgetPosition, W, H, ButtonName, Image, B
     buttonState = buttonState.inactive,
     buttonType = ButtonType or buttonType.pushbutton,
     buttonSelected = false,
-    globalVarValue = globalVarValue or KeyValues.Neutral,
-    EKMFFireEvent = false
+    globalVarValue = globalVarValue or KeyValues.Neutral
   }
 
   function self.draw( event, widget)
@@ -264,6 +256,11 @@ local function CreateButton(Position, WidgetPosition, W, H, ButtonName, Image, B
         return
       end
     end
+
+--    if ChannelLearning == 0 and self.globalVarValue == KeyValues.Sync
+--    then
+--      return
+--    end
 
     if self.buttonSelected then
       lcd.drawFilledCircle(pos.center.x, pos.center.y, pos.radius, widget.options.SelectBorder)
@@ -283,7 +280,7 @@ local function CreateButton(Position, WidgetPosition, W, H, ButtonName, Image, B
   --[ Eventhandler für einen Button
   --[#####################################################################################################
   function self.onEvent(event, touchState, widget)
-    write_log("self.OnEvent is entered at " .. self.ButtonName .. " at active Channel " .. ActiveChannel .. " from ActiveButtonPage " .. ActiveButtonPage ,false)
+    write_log("self.OnEvent is entered at " .. self.ButtonName ,false)
     if event == nil then -- Widget mode
       -- Draw in widget mode. The size equals zone.w by zone.h
     else -- Full screen mode
@@ -293,49 +290,26 @@ local function CreateButton(Position, WidgetPosition, W, H, ButtonName, Image, B
         if touchState then -- Only touch events come with a touchState
           write_log("self.OnEvent in touchState.",false)
           if event == EVT_TOUCH_FIRST then
-            write_log("self.OnEvent in event State: EVT_TOUCH_FIRST for ButtonType:" .. self.buttonType,false)
             if self.buttonType == buttonType.pushbutton or self.buttonType == buttonType.switch then
-              write_log("self.OnEvent Push or Switch Button is pressed." ,false)
               self.buttonState = buttonState.active
             elseif self.buttonType == buttonType.togglebutton then
-              write_log("self.OnEvent Toggle Button is pressed." ,false)
               if self.buttonState == buttonState.active then
                 self.buttonState = buttonState.inactive
               else
                 self.buttonState = buttonState.active
-              end
-            elseif self.buttonType == buttonType.ekmfabutton and ActiveChannel == 2 then
-              write_log("self.OnEvent EKMF Button is pressed." ,false)
-              if self.buttonState == buttonState.inactive then
-                write_log("self.OnEvent EKMF Button is Inactive, reset all other." ,false)
-                model.setGlobalVariable(GlobalVarialble[ActiveChannel].Index, GlobalVarialble[ActiveChannel].Phase, KeyValues.Neutral)
-                for i=1, #buttons[ActiveChannel][ActiveButtonPage] do
-                  if buttons[ActiveChannel][ActiveButtonPage][i].buttonState == buttonState.active then
-                    buttons[ActiveChannel][ActiveButtonPage][i].buttonState = buttonState.inactive
-                  end
-                end
-                write_log("self.OnEvent EKMF Button will be set to Active" ,false)
-                self.buttonState = buttonState.active
-              else
-                self.EKMFFireEvent = true;
               end
             end
             self.buttonSelected = true
             return self.callBack(self, widget)
             -- When the finger first hits the screen
           elseif event == EVT_TOUCH_BREAK then
-            write_log("self.OnEvent in event State: EVT_TOUCH_BREAK" ,false)
             if self.buttonType == buttonType.pushbutton or self.buttonType == buttonType.switch then
               self.buttonState = buttonState.inactive
-            elseif self.buttonType == buttonType.ekmfabutton and ActiveChannel == 2 then
-              write_log("self.OnEvent EKMF Button will fire Event." ,false)
-              self.EKMFFireEvent=false;
             end
             self.buttonSelected = false
             return self.callBack(self, widget)
             -- When the finger leaves the screen and did not slide on it
           elseif event == EVT_TOUCH_TAP then
-            write_log("self.OnEvent in event State: EVT_TOUCH_TAP Count [" .. touchState.tapCount .. "]" ,false)
             if self.buttonType == buttonType.pushbutton or self.buttonType == buttonType.switch then
               self.buttonState = buttonState.inactive
             end
@@ -409,14 +383,8 @@ end
 local function LoadConfig(widget)
   write_log("LoadConfig: Bitmap Width:" .. BitmapWidth .. " BitmapHeight:" .. BitmapHeight,true)
 
-
   -- Inititalisieren der Globalenn Variable
   model.setGlobalVariable(GlobalVarialble[ActiveChannel].Index, GlobalVarialble[ActiveChannel].Phase, KeyValues.Neutral)
-
-  model.setLogicalSwitch(63, {func=LS_FUNC_VEQUAL, v1=getSourceIndex("GV2"), v2=1024, duration=1})
-  model.setLogicalSwitch(62, {func=LS_FUNC_VEQUAL, v1=getSourceIndex("GV2"), v2=-1024})
-  model.setLogicalSwitch(61, {func=LS_FUNC_TIMER,v1=LSTaktzeit,v2=LSTaktzeit, ["and"]=getSwitchIndex("L64")})
-  model.setLogicalSwitch(60, {func=LS_FUNC_OR,v1=getSwitchIndex("L62"),v2=getSwitchIndex("L63")})
 
   buttons = {}
   for channel=1, #configTable do
@@ -433,7 +401,7 @@ local function LoadConfig(widget)
                                 ,BitmapWidth
                                 ,BitmapHeight
                                 ,configTable[channel][page][idx].Name
-                                ,Bitmap.open("/WIDGETS/TBSSWT/PNG/" .. configTable[channel][page][idx].FileName)
+                                ,Bitmap.open("/WIDGETS/SWTBOX/PNG/" .. configTable[channel][page][idx].FileName)
                                 ,configTable[channel][page][idx].Mode
                                 ,configTable[channel][page][idx].Value
                                 , CallBackFunktion)
@@ -459,13 +427,13 @@ local function findTouched(event, touchState, widget)
             and touchState.y >= buttons[ActiveChannel][ActiveButtonPage][i].position.y
             and touchState.y <= buttons[ActiveChannel][ActiveButtonPage][i].ymax then
             result = true
-            write_log("findTouched found at [" .. buttons[ActiveChannel][ActiveButtonPage][i].ButtonName .. "] Type:" ..buttons[ActiveChannel][ActiveButtonPage][i].buttonType, false)
+            write_log("findTouched found at [" .. buttons[ActiveChannel][ActiveButtonPage][i].ButtonName .. " Type:" ..buttons[ActiveChannel][ActiveButtonPage][i].buttonType, false)
             buttons[ActiveChannel][ActiveButtonPage][i].onEvent(event, touchState, widget);
           end
         end
       else
         if event == EVT_VIRTUAL_NEXT_PAGE or event == EVT_VIRTUAL_PREV_PAGE then
-          if widget.options.SecondCoder12Key == 1 then
+          if widget.options.TwinChannel == 1 then
             if ActiveChannel == 1 then
               ActiveChannel = 2
             else
