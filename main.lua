@@ -1,4 +1,4 @@
--- Lua SwitchBox for Beier SFR-1 widget V0.1
+-- Lua SwitchBox for Beier SFR-1 widget V1.0.0.1
 --
 --
 -- A Radiomaster TX16S widget for the EdgeTX OS to simulate a SWTBOX
@@ -75,6 +75,154 @@ local buttonType = {
   switch = "switch"
 }
 
+local SelectedModelImageID = 1
+
+--[	####################################################################
+--[ Konfiguration der Modellvarianten.
+--[	####################################################################
+local ModelImages =
+{
+  { --[ Das Model default darf nicht entfernt oder Umbenannt werden da es für nicht konfigurierte Modelle dient.
+    ModelName="default",
+    ButtonImages = {
+      {
+        -- Seite 1 Ebne 1
+        {
+          { Name="btn0.png" },
+          { Name="btn1.png" },
+          { Name="btn2.png" },
+          { Name="btn3.png" },
+          { Name="btn4.png" },
+          { Name="btn5.png" },
+          { Name="btn6.png" },
+          { Name="btn7.png" },
+          { Name="btn8.png" },
+          { Name="btn9.png" },
+          { Name="btn10.png" },
+          { Name="btn11.png" }
+        },
+        -- Seite 1 Ebene 2
+        {
+          { Name="btn0.png" },
+          { Name="btn21.png" },
+          { Name="btn22.png" },
+          { Name="btn82.png" },
+          { Name="btn83.png" },
+          { Name="btn25.png" },
+          { Name="btn26.png" },
+          { Name="btn27.png" },
+          { Name="btn28.png" },
+          { Name="btn29.png" },
+          { Name="btn30.png" },
+          { Name="btn31.png" }
+        }
+      },
+      {
+        -- Seite 2 Ebne 1
+        {
+          { Name="btn0.png" },
+          { Name="btn50.png" },
+          { Name="btn51.png" },
+          { Name="btn52.png" },
+          { Name="btn54.png" },
+          { Name="btn55.png" },
+          { Name="btn56.png" },
+          { Name="btn57.png" },
+          { Name="btn58.png" },
+          { Name="btn59.png" },
+          { Name="btn60.png" },
+          { Name="btn61.png" }
+        },
+        -- Seite 2 Ebene 2
+        {
+          { Name="btn0.png" },
+          { Name="btn70.png" },
+          { Name="btn71.png" },
+          { Name="btn72.png" },
+          { Name="btn73.png" },
+          { Name="btn74.png" },
+          { Name="btn75.png" },
+          { Name="btn76.png" },
+          { Name="btn77.png" },
+          { Name="btn78.png" },
+          { Name="btn79.png" },
+          { Name="btn80.png" }
+        }
+      }
+    }
+  }, --[ ENDE ModelName default
+   -- [ Beispielmodell zum Kopieren. Der Modellname muss Identisch zum eintrag ModelName=... sein.
+  {
+    ModelName="Unimog 406",
+    ButtonImages = {
+      {
+        -- Seite 1 Ebne 1
+        {
+          { Name="btn0.png" },
+          { Name="btn1.png" },
+          { Name="btn2.png" },
+          { Name="btn3.png" },
+          { Name="btn4.png" },
+          { Name="btn5.png" },
+          { Name="btn6.png" },
+          { Name="btn7.png" },
+          { Name="btn8.png" },
+          { Name="btn9.png" },
+          { Name="btn10.png" },
+          { Name="btn11.png" }
+        },
+        -- Seite 1 Ebene 2
+        {
+          { Name="btn0.png" },
+          { Name="btn21.png" },
+          { Name="btn22.png" },
+          { Name="btn82.png" },
+          { Name="btn83.png" },
+          { Name="btn25.png" },
+          { Name="btn26.png" },
+          { Name="btn27.png" },
+          { Name="btn28.png" },
+          { Name="btn29.png" },
+          { Name="btn30.png" },
+          { Name="btn31.png" }
+        }
+      },
+      {
+        -- Seite 2 Ebne 1
+        {
+          { Name="btn0.png" },
+          { Name="btn50.png" },
+          { Name="btn51.png" },
+          { Name="btn52.png" },
+          { Name="btn54.png" },
+          { Name="btn55.png" },
+          { Name="btn56.png" },
+          { Name="btn57.png" },
+          { Name="btn58.png" },
+          { Name="btn59.png" },
+          { Name="btn60.png" },
+          { Name="btn61.png" }
+        },
+        -- Seite 2 Ebene 2
+        {
+          { Name="btn0.png" },
+          { Name="btn70.png" },
+          { Name="btn71.png" },
+          { Name="btn72.png" },
+          { Name="btn73.png" },
+          { Name="btn74.png" },
+          { Name="btn75.png" },
+          { Name="btn76.png" },
+          { Name="btn77.png" },
+          { Name="btn78.png" },
+          { Name="btn79.png" },
+          { Name="btn80.png" }
+        }
+      }
+    }
+  } --[Ende Beispielmodell
+}
+
 --[	####################################################################
 --[	Konfiguration der Buttons 
 --[	Cotrol im Widget (max. 2 Stk.)
@@ -85,66 +233,66 @@ local configTable = {
   {
     -- Seite 1 Ebne 1
     {
-      { Name="Umschaltung", FileName="btn0.png", Mode=buttonType.switch,ROW=1,COL=1, Value=KeyValues.Umschaltung },
-      { Name="Standlicht", FileName="btn1.png", Mode=buttonType.pushbutton,ROW=1,COL=2,Value=KeyValues.Taste11 },
-      { Name="Abblendlicht", FileName="btn2.png", Mode=buttonType.pushbutton,ROW=1,COL=3, Value=KeyValues.Taste10 },
-      { Name="Fernlicht", FileName="btn3.png", Mode=buttonType.pushbutton,ROW=1,COL=4, Value=KeyValues.Taste9 },
-      { Name="Scheinwerfer", FileName="btn4.png", Mode=buttonType.pushbutton,ROW=1,COL=5, Value=KeyValues.Taste8 },
-      { Name="Nebelscheinwerfer", FileName="btn5.png", Mode=buttonType.pushbutton,ROW=1,COL=6, Value=KeyValues.Taste7 },
-      { Name="Blaulicht", FileName="btn6.png", Mode=buttonType.pushbutton,ROW=2,COL=1, Value=KeyValues.Taste1 },
-      { Name="Scheinwerfer", FileName="btn7.png", Mode=buttonType.pushbutton,ROW=2,COL=2, Value=KeyValues.Taste2 },
-      { Name="Strahler", FileName="btn8.png", Mode=buttonType.pushbutton,ROW=2,COL=3, Value=KeyValues.Taste3 },
-      { Name="Blinker links", FileName="btn9.png", Mode=buttonType.pushbutton,ROW=2,COL=4, Value=KeyValues.Taste4 },
-      { Name="Warnblinker", FileName="btn10.png", Mode=buttonType.pushbutton,ROW=2,COL=5, Value=KeyValues.Taste5 },
-      { Name="Blinker rechts", FileName="btn11.png", Mode=buttonType.pushbutton,ROW=2,COL=6, Value=KeyValues.Taste6 }
-  --    { Name="SyncButton" , FileName="sync.png", Mode=buttonType.pushbutton,ROW=3,COL=3, Value=KeyValues.Sync }
+      { Name="Umschaltung", Mode=buttonType.switch,ROW=1,COL=1, Value=KeyValues.Umschaltung },
+      { Name="Standlicht", Mode=buttonType.pushbutton,ROW=1,COL=2,Value=KeyValues.Taste11 },
+      { Name="Abblendlicht", Mode=buttonType.pushbutton,ROW=1,COL=3, Value=KeyValues.Taste10 },
+      { Name="Fernlicht", Mode=buttonType.pushbutton,ROW=1,COL=4, Value=KeyValues.Taste9 },
+      { Name="Scheinwerfer", Mode=buttonType.pushbutton,ROW=1,COL=5, Value=KeyValues.Taste8 },
+      { Name="Nebelscheinwerfer", Mode=buttonType.pushbutton,ROW=1,COL=6, Value=KeyValues.Taste7 },
+      { Name="Blaulicht", Mode=buttonType.pushbutton,ROW=2,COL=1, Value=KeyValues.Taste1 },
+      { Name="Scheinwerfer", Mode=buttonType.pushbutton,ROW=2,COL=2, Value=KeyValues.Taste2 },
+      { Name="Strahler", Mode=buttonType.pushbutton,ROW=2,COL=3, Value=KeyValues.Taste3 },
+      { Name="Blinker links", Mode=buttonType.pushbutton,ROW=2,COL=4, Value=KeyValues.Taste4 },
+      { Name="Warnblinker", Mode=buttonType.pushbutton,ROW=2,COL=5, Value=KeyValues.Taste5 },
+      { Name="Blinker rechts", Mode=buttonType.pushbutton,ROW=2,COL=6, Value=KeyValues.Taste6 }
+  --    { Name="SyncButton" , Mode=buttonType.pushbutton,ROW=3,COL=3, Value=KeyValues.Sync }
     },
     -- Seite 1 Ebene 2
     {
-      { Name="Umschaltung", FileName="btn0.png", Mode=buttonType.switch,ROW=1,COL=1, Value=KeyValues.Umschaltung },
-      { Name="Stuetze auf", FileName="btn21.png", Mode=buttonType.pushbutton,ROW=1,COL=2,Value=KeyValues.Taste11 },
-      { Name="Stuetze ab", FileName="btn22.png", Mode=buttonType.pushbutton,ROW=1,COL=3, Value=KeyValues.Taste10 },
-      { Name="Kurve 1", FileName="btn82.png", Mode=buttonType.pushbutton,ROW=1,COL=4, Value=KeyValues.Taste9 },
-      { Name="Kurve 2", FileName="btn83.png", Mode=buttonType.pushbutton,ROW=1,COL=5, Value=KeyValues.Taste8 },
-      { Name="Sattelplatte", FileName="btn25.png", Mode=buttonType.pushbutton,ROW=1,COL=6, Value=KeyValues.Taste7 },
-      { Name="Schubboden", FileName="btn26.png", Mode=buttonType.pushbutton,ROW=2,COL=1, Value=KeyValues.Taste1 },
-      { Name="Schubboden", FileName="btn27.png", Mode=buttonType.pushbutton,ROW=2,COL=2, Value=KeyValues.Taste2 },
-      { Name="Kippen", FileName="btn28.png", Mode=buttonType.pushbutton,ROW=2,COL=3, Value=KeyValues.Taste3 },
-      { Name="Kippen", FileName="btn29.png", Mode=buttonType.pushbutton,ROW=2,COL=4, Value=KeyValues.Taste4 },
-      { Name="Plus", FileName="btn30.png", Mode=buttonType.pushbutton,ROW=2,COL=5, Value=KeyValues.Taste5 },
-      { Name="Minus", FileName="btn31.png", Mode=buttonType.pushbutton,ROW=2,COL=6, Value=KeyValues.Taste6 }
+      { Name="Umschaltung", Mode=buttonType.switch,ROW=1,COL=1, Value=KeyValues.Umschaltung },
+      { Name="Stuetze auf", Mode=buttonType.pushbutton,ROW=1,COL=2,Value=KeyValues.Taste11 },
+      { Name="Stuetze ab", Mode=buttonType.pushbutton,ROW=1,COL=3, Value=KeyValues.Taste10 },
+      { Name="Kurve 1", Mode=buttonType.pushbutton,ROW=1,COL=4, Value=KeyValues.Taste9 },
+      { Name="Kurve 2", Mode=buttonType.pushbutton,ROW=1,COL=5, Value=KeyValues.Taste8 },
+      { Name="Sattelplatte", Mode=buttonType.pushbutton,ROW=1,COL=6, Value=KeyValues.Taste7 },
+      { Name="Schubboden", Mode=buttonType.pushbutton,ROW=2,COL=1, Value=KeyValues.Taste1 },
+      { Name="Schubboden", Mode=buttonType.pushbutton,ROW=2,COL=2, Value=KeyValues.Taste2 },
+      { Name="Kippen", Mode=buttonType.pushbutton,ROW=2,COL=3, Value=KeyValues.Taste3 },
+      { Name="Kippen", Mode=buttonType.pushbutton,ROW=2,COL=4, Value=KeyValues.Taste4 },
+      { Name="Plus", Mode=buttonType.pushbutton,ROW=2,COL=5, Value=KeyValues.Taste5 },
+      { Name="Minus", Mode=buttonType.pushbutton,ROW=2,COL=6, Value=KeyValues.Taste6 }
     }
   },
   {
     -- Seite 2 Ebne 1
     {
-      { Name="Umschaltung", FileName="btn0.png", Mode=buttonType.switch,ROW=1,COL=1, Value=KeyValues.Umschaltung },
-      { Name="Servo 1", FileName="btn50.png", Mode=buttonType.pushbutton,ROW=1,COL=2,Value=KeyValues.Taste11 },
-      { Name="Servo 2", FileName="btn51.png", Mode=buttonType.pushbutton,ROW=1,COL=3, Value=KeyValues.Taste10 },
-      { Name="Servo 3", FileName="btn52.png", Mode=buttonType.pushbutton,ROW=1,COL=4, Value=KeyValues.Taste9 },
-      { Name="Audio 1", FileName="btn54.png", Mode=buttonType.pushbutton,ROW=1,COL=5, Value=KeyValues.Taste8 },
-      { Name="Audio 2", FileName="btn55.png", Mode=buttonType.pushbutton,ROW=1,COL=6, Value=KeyValues.Taste7 },
-      { Name="Audio aus", FileName="btn56.png", Mode=buttonType.pushbutton,ROW=2,COL=1, Value=KeyValues.Taste1 },
-      { Name="Tempomat", FileName="btn57.png", Mode=buttonType.pushbutton,ROW=2,COL=2, Value=KeyValues.Taste2 },
-      { Name="Gas Spiel", FileName="btn58.png", Mode=buttonType.pushbutton,ROW=2,COL=3, Value=KeyValues.Taste3 },
-      { Name="Lift", FileName="btn59.png", Mode=buttonType.pushbutton,ROW=2,COL=4, Value=KeyValues.Taste4 },
-      { Name="Funktion 1", FileName="btn60.png", Mode=buttonType.pushbutton,ROW=2,COL=5, Value=KeyValues.Taste5 },
-      { Name="Funktion 2", FileName="btn61.png", Mode=buttonType.pushbutton,ROW=2,COL=6, Value=KeyValues.Taste6 }
+      { Name="Umschaltung", Mode=buttonType.switch,ROW=1,COL=1, Value=KeyValues.Umschaltung },
+      { Name="Servo 1", Mode=buttonType.pushbutton,ROW=1,COL=2,Value=KeyValues.Taste11 },
+      { Name="Servo 2", Mode=buttonType.pushbutton,ROW=1,COL=3, Value=KeyValues.Taste10 },
+      { Name="Servo 3", Mode=buttonType.pushbutton,ROW=1,COL=4, Value=KeyValues.Taste9 },
+      { Name="Audio 1", Mode=buttonType.pushbutton,ROW=1,COL=5, Value=KeyValues.Taste8 },
+      { Name="Audio 2", Mode=buttonType.pushbutton,ROW=1,COL=6, Value=KeyValues.Taste7 },
+      { Name="Audio aus", Mode=buttonType.pushbutton,ROW=2,COL=1, Value=KeyValues.Taste1 },
+      { Name="Tempomat", Mode=buttonType.pushbutton,ROW=2,COL=2, Value=KeyValues.Taste2 },
+      { Name="Gas Spiel", Mode=buttonType.pushbutton,ROW=2,COL=3, Value=KeyValues.Taste3 },
+      { Name="Lift", Mode=buttonType.pushbutton,ROW=2,COL=4, Value=KeyValues.Taste4 },
+      { Name="Funktion 1", Mode=buttonType.pushbutton,ROW=2,COL=5, Value=KeyValues.Taste5 },
+      { Name="Funktion 2", Mode=buttonType.pushbutton,ROW=2,COL=6, Value=KeyValues.Taste6 }
     },
     -- Seite 2 Ebene 2
     {
-      { Name="Umschaltung", FileName="btn0.png", Mode=buttonType.switch,ROW=1,COL=1, Value=KeyValues.Umschaltung },
-      { Name="Sequenz 1", FileName="btn70.png", Mode=buttonType.pushbutton,ROW=1,COL=2,Value=KeyValues.Taste11 },
-      { Name="Sequenz 2", FileName="btn71.png", Mode=buttonType.pushbutton,ROW=1,COL=3, Value=KeyValues.Taste10 },
-      { Name="Sequenz 3", FileName="btn72.png", Mode=buttonType.pushbutton,ROW=1,COL=4, Value=KeyValues.Taste9 },
-      { Name="Sequenz 4", FileName="btn73.png", Mode=buttonType.pushbutton,ROW=1,COL=5, Value=KeyValues.Taste8 },
-      { Name="Sequenz 5", FileName="btn74.png", Mode=buttonType.pushbutton,ROW=1,COL=6, Value=KeyValues.Taste7 },
-      { Name="Sequenz 6", FileName="btn75.png", Mode=buttonType.pushbutton,ROW=2,COL=1, Value=KeyValues.Taste1 },
-      { Name="Sequenz 7", FileName="btn76.png", Mode=buttonType.pushbutton,ROW=2,COL=2, Value=KeyValues.Taste2 },
-      { Name="Sequenz 8", FileName="btn77.png", Mode=buttonType.pushbutton,ROW=2,COL=3, Value=KeyValues.Taste3 },
-      { Name="Multifunktion 1", FileName="btn78.png", Mode=buttonType.pushbutton,ROW=2,COL=4, Value=KeyValues.Taste4 },
-      { Name="Multifunktion 2", FileName="btn79.png", Mode=buttonType.pushbutton,ROW=2,COL=5, Value=KeyValues.Taste5 },
-      { Name="Multifunktion 3", FileName="btn80.png", Mode=buttonType.pushbutton,ROW=2,COL=6, Value=KeyValues.Taste6 }
+      { Name="Umschaltung", Mode=buttonType.switch,ROW=1,COL=1, Value=KeyValues.Umschaltung },
+      { Name="Sequenz 1", Mode=buttonType.pushbutton,ROW=1,COL=2,Value=KeyValues.Taste11 },
+      { Name="Sequenz 2", Mode=buttonType.pushbutton,ROW=1,COL=3, Value=KeyValues.Taste10 },
+      { Name="Sequenz 3", Mode=buttonType.pushbutton,ROW=1,COL=4, Value=KeyValues.Taste9 },
+      { Name="Sequenz 4", Mode=buttonType.pushbutton,ROW=1,COL=5, Value=KeyValues.Taste8 },
+      { Name="Sequenz 5", Mode=buttonType.pushbutton,ROW=1,COL=6, Value=KeyValues.Taste7 },
+      { Name="Sequenz 6", Mode=buttonType.pushbutton,ROW=2,COL=1, Value=KeyValues.Taste1 },
+      { Name="Sequenz 7", Mode=buttonType.pushbutton,ROW=2,COL=2, Value=KeyValues.Taste2 },
+      { Name="Sequenz 8", Mode=buttonType.pushbutton,ROW=2,COL=3, Value=KeyValues.Taste3 },
+      { Name="Multifunktion 1", Mode=buttonType.pushbutton,ROW=2,COL=4, Value=KeyValues.Taste4 },
+      { Name="Multifunktion 2", Mode=buttonType.pushbutton,ROW=2,COL=5, Value=KeyValues.Taste5 },
+      { Name="Multifunktion 3", Mode=buttonType.pushbutton,ROW=2,COL=6, Value=KeyValues.Taste6 }
     }
   }
 }
@@ -189,18 +337,7 @@ local function CallBackFunktion(ImageButton, widget)
     end
   end
   write_log("Callback " .. ImageButton.ButtonName .. " State:" .. ImageButton.buttonState .. " Value:" .. Value .. " AktivBtnPg:" .. ActiveButtonPage, false)
---  if Value == KeyValues.Sync
---  then
---    model.setGlobalVariable(GlobalVarialble[ActiveChannel].Index, GlobalVarialble[ActiveChannel].Phase, KeyValues.Umschaltung)
---    playHaptic(20, 200 )
---    model.setGlobalVariable(GlobalVarialble[ActiveChannel].Index, GlobalVarialble[ActiveChannel].Phase, KeyValues.Neutral)
---    playHaptic(20, 10 )
---    playHaptic(20, 500 )
---    model.setGlobalVariable(GlobalVarialble[ActiveChannel].Index, GlobalVarialble[ActiveChannel].Phase, KeyValues.Taste7)
---    playHaptic(200, 0 )
---    Value = KeyValues.Neutral
---end
-  -- Zeilenumschaltung und Timer Handling
+
   if ImageButton.buttonType == buttonType.switch and Value ~= KeyValues.Neutral then
     if ActiveButtonPage == 2 then
       ActiveButtonPage = 1
@@ -256,11 +393,6 @@ local function CreateButton(Position, WidgetPosition, W, H, ButtonName, Image, B
         return
       end
     end
-
---    if ChannelLearning == 0 and self.globalVarValue == KeyValues.Sync
---    then
---      return
---    end
 
     if self.buttonSelected then
       lcd.drawFilledCircle(pos.center.x, pos.center.y, pos.radius, widget.options.SelectBorder)
@@ -382,7 +514,38 @@ end
 --[ ====================================================================================================
 local function LoadConfig(widget)
   write_log("LoadConfig: Bitmap Width:" .. BitmapWidth .. " BitmapHeight:" .. BitmapHeight,true)
+  ModelInfo = model.getInfo()
+  SelectedModelImageID = 1
+  write_log("Model is:" .. ModelInfo.name)
+  write_log("SelectedModelImageID:" .. SelectedModelImageID)
+  for modelID = 1, #ModelImages do
+    if ModelInfo.name == ModelImages[modelID].ModelName then
+      write_log("Mode found :" .. ModelImages[modelID].ModelName)
+      SelectedModelImageID = modelID
+      break
+    else
+      write_log("Mode not found at modelID:" .. modelID .. "[".. ModelImages[modelID].ModelName .. "]")
+    end
+  end
 
+  write_log("############################################################")
+  write_log("# Probe the Model :" .. ModelImages[SelectedModelImageID].ModelName .. " with ID: " .. SelectedModelImageID)
+  write_log("# ButtonImages Count:" .. #ModelImages[SelectedModelImageID].ButtonImages)
+
+  for chn = 1, #ModelImages[SelectedModelImageID].ButtonImages do
+    write_log("#==========================================================")
+    write_log("# Channel Nr.:" .. chn)
+    write_log("#----------------------------------------------------------")
+    for pagenr = 1, #ModelImages[SelectedModelImageID].ButtonImages[chn] do
+      write_log("#==========================================================")
+      write_log("# Page Nr.:" .. pagenr)
+      write_log("#----------------------------------------------------------")
+      for img = 1, #ModelImages[SelectedModelImageID].ButtonImages[chn][pagenr] do
+        write_log("# Image Nr.:" .. img)
+        write_log("# Image Name:" .. ModelImages[SelectedModelImageID].ButtonImages[chn][pagenr][img].Name)
+      end
+    end
+  end
   -- Inititalisieren der Globalenn Variable
   model.setGlobalVariable(GlobalVarialble[ActiveChannel].Index, GlobalVarialble[ActiveChannel].Phase, KeyValues.Neutral)
 
@@ -396,12 +559,13 @@ local function LoadConfig(widget)
       for idx=1, #configTable[channel][page] do
         local Position,WidgetPosition = CalculateFullscreen(configTable[channel][page][idx].ROW, configTable[channel][page][idx].COL, widget)
         write_log("LoadConfig: Row:" .. configTable[channel][page][idx].ROW .. "Col:" .. configTable[channel][page][idx].COL .. " x:" .. Position.x .. " y:" .. Position.y, false)
+        -- configTable[channel][page][idx].FileName 
         buttons[channel][page][idx] = CreateButton(Position
                                 ,WidgetPosition
                                 ,BitmapWidth
                                 ,BitmapHeight
                                 ,configTable[channel][page][idx].Name
-                                ,Bitmap.open("/WIDGETS/SWTBOX/PNG/" .. configTable[channel][page][idx].FileName)
+                                ,Bitmap.open("/WIDGETS/SWTBOX/PNG/" .. ModelImages[SelectedModelImageID].ButtonImages[channel][page][idx].Name)
                                 ,configTable[channel][page][idx].Mode
                                 ,configTable[channel][page][idx].Value
                                 , CallBackFunktion)

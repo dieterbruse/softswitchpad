@@ -1,3 +1,5 @@
+Ab Version 1.0.0.1 sind die Button Modellspezifisch konfigurierbar. Mehr Infos im Wiki.
+
 SFR1Box für USM RC3 Soundmodul und dem SFR-1/D/HL Soundfahrtenregler der Fa. Beier Electronic.
 Mit dem SFR1Box ist es möglich die Steuerung des Beier Steuerpad 1 und Steuerpad 2 zu übernehmen. 
 Mehr Infos hierzu kannst Du im Wiki Nachlesen.
